@@ -2,6 +2,12 @@
 index.html
 docs.html
 
+# Internal project docs
+agent.md
+claude.md
+project.md
+security-report.md
+
 # Extension build output
 extension/out/
 extension/node_modules/
