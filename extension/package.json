@@ -1,9 +1,9 @@
 {
-  "name": "security-sentinel",
-  "displayName": "Security Sentinel",
+  "name": "watsonsec",
+  "displayName": "WatsonSec",
   "description": "Real-time AI-powered security scanning using Claude",
   "version": "0.1.0",
-  "publisher": "security-sentinel",
+  "publisher": "watsonsec",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -20,52 +20,52 @@
     "languageModels": [],
     "commands": [
       {
-        "command": "securitySentinel.openReport",
+        "command": "watsonSec.openReport",
         "title": "Open Security Report",
-        "category": "Security Sentinel"
+        "category": "WatsonSec"
       },
       {
-        "command": "securitySentinel.scanAll",
+        "command": "watsonSec.scanAll",
         "title": "Run Full Scan",
-        "category": "Security Sentinel"
+        "category": "WatsonSec"
       },
       {
-        "command": "securitySentinel.scanFile",
+        "command": "watsonSec.scanFile",
         "title": "Scan Current File",
-        "category": "Security Sentinel"
+        "category": "WatsonSec"
       },
       {
-        "command": "securitySentinel.clearResolved",
+        "command": "watsonSec.clearResolved",
         "title": "Clear Resolved Findings",
-        "category": "Security Sentinel"
+        "category": "WatsonSec"
       },
       {
-        "command": "securitySentinel.enable",
-        "title": "Enable Security Sentinel",
-        "category": "Security Sentinel"
+        "command": "watsonSec.enable",
+        "title": "Enable WatsonSec",
+        "category": "WatsonSec"
       },
       {
-        "command": "securitySentinel.disable",
-        "title": "Disable Security Sentinel",
-        "category": "Security Sentinel"
+        "command": "watsonSec.disable",
+        "title": "Disable WatsonSec",
+        "category": "WatsonSec"
       }
     ],
     "configuration": {
-      "title": "Security Sentinel",
+      "title": "WatsonSec",
       "properties": {
-        "securitySentinel.enabled": {
+        "watsonSec.enabled": {
           "type": "boolean",
           "default": true
         },
-        "securitySentinel.scanOnSave": {
+        "watsonSec.scanOnSave": {
           "type": "boolean",
           "default": true
         },
-        "securitySentinel.scanOnOpen": {
+        "watsonSec.scanOnOpen": {
           "type": "boolean",
           "default": true
         },
-        "securitySentinel.minSeverity": {
+        "watsonSec.minSeverity": {
           "type": "string",
           "enum": [
             "critical",
@@ -76,12 +76,12 @@
           ],
           "default": "low"
         },
-        "securitySentinel.reportPath": {
+        "watsonSec.reportPath": {
           "type": "string",
           "default": "security-report.md",
           "description": "Path relative to workspace root"
         },
-        "securitySentinel.refreshInterval": {
+        "watsonSec.refreshInterval": {
           "type": "number",
           "default": 60,
           "minimum": 0,

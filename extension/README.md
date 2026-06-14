@@ -1,11 +1,11 @@
-# Security Sentinel
+# WatsonSec
 
 Real-time AI-powered security scanning for VS Code, using Claude by Anthropic.
 
 ## Setup
 
 1. Install the extension.
-2. Open the Command Palette (`Cmd+Shift+P`) and run **Security Sentinel: Set Anthropic API Key**.
+2. Open the Command Palette (`Cmd+Shift+P`) and run **WatsonSec: Set Anthropic API Key**.
 3. Enter your key (starts with `sk-ant-`). The extension will immediately begin scanning your workspace.
 
 ## Features
@@ -31,11 +31,11 @@ Real-time AI-powered security scanning for VS Code, using Claude by Anthropic.
 
 | Setting | Default | Description |
 |---|---|---|
-| `securitySentinel.enabled` | `true` | Enable/disable scanning |
-| `securitySentinel.scanOnSave` | `true` | Scan on every file save |
-| `securitySentinel.scanOnOpen` | `true` | Scan when a file is opened |
-| `securitySentinel.minSeverity` | `"low"` | Minimum severity to show |
-| `securitySentinel.reportPath` | `"security-report.md"` | Path for the report file |
+| `watsonSec.enabled` | `true` | Enable/disable scanning |
+| `watsonSec.scanOnSave` | `true` | Scan on every file save |
+| `watsonSec.scanOnOpen` | `true` | Scan when a file is opened |
+| `watsonSec.minSeverity` | `"low"` | Minimum severity to show |
+| `watsonSec.reportPath` | `"security-report.md"` | Path for the report file |
 
 ## Privacy
 

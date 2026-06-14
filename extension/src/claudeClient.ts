@@ -15,7 +15,7 @@ let cachedModel: vscode.LanguageModelChat | null = null;
 function enqueue<T>(fn: () => Promise<T>): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     if (queue.length >= MAX_QUEUE) {
-      reject(new Error('Security Sentinel: scan queue full — try again after current scans finish.'));
+      reject(new Error('WatsonSec: scan queue full — try again after current scans finish.'));
       return;
     }
     const run = () => {
@@ -42,7 +42,7 @@ async function selectModel(): Promise<vscode.LanguageModelChat> {
   if (any.length > 0) { cachedModel = any[0]; return cachedModel; }
 
   throw new Error(
-    'Security Sentinel: No language model available. Open a session with any AI agent (Copilot, Cursor, Claude, etc.) and try again.'
+    'WatsonSec: No language model available. Open a session with any AI agent (Copilot, Cursor, Claude, etc.) and try again.'
   );
 }
 

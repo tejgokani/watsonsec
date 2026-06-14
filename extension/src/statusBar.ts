@@ -5,8 +5,8 @@ let statusBarItem: vscode.StatusBarItem | null = null;
 
 export function createStatusBar(): vscode.StatusBarItem {
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-  statusBarItem.command = 'securitySentinel.openReport';
-  statusBarItem.text = '$(shield) Security Sentinel';
+  statusBarItem.command = 'watsonSec.openReport';
+  statusBarItem.text = '$(shield) WatsonSec';
   statusBarItem.show();
   return statusBarItem;
 }
@@ -19,7 +19,7 @@ export function updateStatusBar(findings: Finding[]): void {
 
   if (active.length === 0) {
     statusBarItem.text = '$(shield) No issues';
-    statusBarItem.tooltip = 'Security Sentinel — No active findings';
+    statusBarItem.tooltip = 'WatsonSec — No active findings';
     statusBarItem.backgroundColor = undefined;
     return;
   }
@@ -32,7 +32,7 @@ export function updateStatusBar(findings: Finding[]): void {
   if (counts['info']) parts.push(`⚪ ${counts['info']} info`);
 
   statusBarItem.text = `$(shield) ${parts.join('  ')}`;
-  statusBarItem.tooltip = 'Security Sentinel — Click to open report';
+  statusBarItem.tooltip = 'WatsonSec — Click to open report';
   statusBarItem.backgroundColor = counts['critical'] > 0
     ? new vscode.ThemeColor('statusBarItem.errorBackground')
     : undefined;

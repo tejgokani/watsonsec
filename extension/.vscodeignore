@@ -4,3 +4,4 @@ node_modules/**
 !README.md
 tsconfig.json
 .vscodeignore
+out/**/*.js.map

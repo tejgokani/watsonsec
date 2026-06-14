@@ -44,7 +44,7 @@ function buildReport(findings: Finding[], workspaceName: string): string {
     .map(([s, n]) => `${n} ${s}`)
     .join(' · ');
 
-  let md = `# Security Sentinel — Report\n\n`;
+  let md = `# WatsonSec — Report\n\n`;
   md += `**Project:** ${esc(workspaceName)}\n`;
   md += `**Last scanned:** ${new Date().toISOString()}\n`;
   md += `**Status:** ${statusParts || 'No issues found'}\n\n---\n\n`;
@@ -67,11 +67,11 @@ function buildReport(findings: Finding[], workspaceName: string): string {
 export function writeReport(findings: Finding[], workspaceRoot: string, workspaceName: string): void {
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
-    const reportPath = vscode.workspace.getConfiguration('securitySentinel').get<string>('reportPath') ?? 'security-report.md';
+    const reportPath = vscode.workspace.getConfiguration('watsonSec').get<string>('reportPath') ?? 'security-report.md';
     const resolved = path.resolve(workspaceRoot, reportPath);
     const safeRoot = path.resolve(workspaceRoot) + path.sep;
     if (!resolved.startsWith(safeRoot)) {
-      console.error('[Security Sentinel] reportPath escapes workspace root — write aborted.');
+      console.error('[WatsonSec] reportPath escapes workspace root — write aborted.');
       return;
     }
     const tmp = resolved + '.tmp';
@@ -80,7 +80,7 @@ export function writeReport(findings: Finding[], workspaceRoot: string, workspac
       fs.writeFileSync(tmp, content, 'utf8');
       fs.renameSync(tmp, resolved);
     } catch (err) {
-      console.error('[Security Sentinel] Failed to write report:', err);
+      console.error('[WatsonSec] Failed to write report:', err);
     }
   }, DEBOUNCE_MS);
 }

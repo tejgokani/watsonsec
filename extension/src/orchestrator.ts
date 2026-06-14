@@ -55,7 +55,7 @@ function refreshFolders(): void {
 }
 
 export function initialize(ctx: vscode.ExtensionContext): void {
-  outputChannel = vscode.window.createOutputChannel('Security Sentinel');
+  outputChannel = vscode.window.createOutputChannel('WatsonSec');
   ctx.subscriptions.push(outputChannel);
 
   refreshFolders();
@@ -71,7 +71,7 @@ export function initialize(ctx: vscode.ExtensionContext): void {
 }
 
 function getMinSeverityRank(): number {
-  const minSev = vscode.workspace.getConfiguration('securitySentinel').get<string>('minSeverity') ?? 'low';
+  const minSev = vscode.workspace.getConfiguration('watsonSec').get<string>('minSeverity') ?? 'low';
   return SEVERITY_RANK[minSev] ?? 3;
 }
 
@@ -152,14 +152,14 @@ function startScan(filePath: string): void {
 }
 
 export function onFileSaved(document: vscode.TextDocument): void {
-  const cfg = vscode.workspace.getConfiguration('securitySentinel');
+  const cfg = vscode.workspace.getConfiguration('watsonSec');
   if (!cfg.get<boolean>('enabled', true)) return;
   if (!cfg.get<boolean>('scanOnSave', true)) return;
   startScan(document.uri.fsPath);
 }
 
 export function onFileOpened(document: vscode.TextDocument): void {
-  const cfg = vscode.workspace.getConfiguration('securitySentinel');
+  const cfg = vscode.workspace.getConfiguration('watsonSec');
   if (!cfg.get<boolean>('enabled', true)) return;
   if (!cfg.get<boolean>('scanOnOpen', true)) return;
   if (document.uri.scheme !== 'file') return;
@@ -210,7 +210,7 @@ async function getFilesSortedByPriority(): Promise<vscode.Uri[]> {
 export async function runFullScan(): Promise<void> {
   if (!workspaceRoot) return;
 
-  const cfg = vscode.workspace.getConfiguration('securitySentinel');
+  const cfg = vscode.workspace.getConfiguration('watsonSec');
   if (!cfg.get<boolean>('enabled', true)) return;
 
   for (const cts of inFlight.values()) cts.cancel();
@@ -221,7 +221,7 @@ export async function runFullScan(): Promise<void> {
   const total = scannable.length;
 
   if (total === 0) {
-    vscode.window.showInformationMessage('Security Sentinel: No scannable files found.');
+    vscode.window.showInformationMessage('WatsonSec: No scannable files found.');
     return;
   }
 
@@ -229,7 +229,7 @@ export async function runFullScan(): Promise<void> {
   const fullScanCts = new vscode.CancellationTokenSource();
 
   await vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: 'Security Sentinel', cancellable: true },
+    { location: vscode.ProgressLocation.Notification, title: 'WatsonSec', cancellable: true },
     async (progress, progressToken) => {
       progressToken.onCancellationRequested(() => fullScanCts.cancel());
       let done = 0;
@@ -250,7 +250,7 @@ export async function runFullScan(): Promise<void> {
 
       if (!fullScanCts.token.isCancellationRequested) {
         log(`Full scan complete — ${total} files checked.`);
-        vscode.window.showInformationMessage(`Security Sentinel: Scan complete — ${total} files checked.`);
+        vscode.window.showInformationMessage(`WatsonSec: Scan complete — ${total} files checked.`);
       }
     }
   );
@@ -259,7 +259,7 @@ export async function runFullScan(): Promise<void> {
 }
 
 async function refreshTick(): Promise<void> {
-  const cfg = vscode.workspace.getConfiguration('securitySentinel');
+  const cfg = vscode.workspace.getConfiguration('watsonSec');
   if (!cfg.get<boolean>('enabled', true)) return;
 
   // Collect unique file paths that have at least one active (unresolved) finding
@@ -291,7 +291,7 @@ async function refreshTick(): Promise<void> {
 
 export function startRefreshLoop(): void {
   stopRefreshLoop();
-  const intervalSecs = vscode.workspace.getConfiguration('securitySentinel').get<number>('refreshInterval') ?? 60;
+  const intervalSecs = vscode.workspace.getConfiguration('watsonSec').get<number>('refreshInterval') ?? 60;
   if (intervalSecs <= 0) return;
 
   log(`Refresh loop started — interval ${intervalSecs}s.`);
@@ -299,7 +299,7 @@ export function startRefreshLoop(): void {
 
   // Re-read interval if config changes while running
   vscode.workspace.onDidChangeConfiguration(e => {
-    if (e.affectsConfiguration('securitySentinel.refreshInterval')) {
+    if (e.affectsConfiguration('watsonSec.refreshInterval')) {
       startRefreshLoop();
     }
   });
