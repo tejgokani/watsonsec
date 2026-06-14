@@ -4,6 +4,7 @@
   "description": "Real-time AI-powered security scanning using Claude",
   "version": "0.1.0",
   "publisher": "watsonsec",
+  "repository": { "type": "git", "url": "https://github.com/tejgokani/WatsonSec.git" },
   "engines": {
     "vscode": "^1.85.0"
   },
