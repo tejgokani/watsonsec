@@ -1,15 +1,6 @@
-# HTML website files
-index.html
-docs.html
-
-# Internal project docs
-agent.md
-claude.md
-project.md
-security-report.md
-
-# Extension build output
+# Extension build output and dependencies
 extension/out/
+extension/dist/
 extension/node_modules/
 extension/*.vsix
 
@@ -18,3 +9,9 @@ extension/*.vsix
 
 # Claude local settings
 .claude/settings.local.json
+
+# Generated reports (runtime output)
+watsonsec-report.md
+
+# npm logs
+npm-debug.log*

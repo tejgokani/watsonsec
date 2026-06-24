@@ -1,0 +1,91 @@
+{
+  "name": "watsonsec",
+  "displayName": "WatsonSec",
+  "description": "Local-first security engine: runs real scanners (Semgrep, Gitleaks, OSV-Scanner) on every save, deduplicates findings, and surfaces them in a dashboard and MCP bridge.",
+  "version": "0.2.0",
+  "publisher": "tejgokani",
+  "icon": "assets/icon.png",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "security",
+    "semgrep",
+    "gitleaks",
+    "sast",
+    "secrets"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tejgokani/watsonsec.git"
+  },
+  "license": "MIT",
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "workspaceContains:**"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "watsonsec.runScan",
+        "title": "WatsonSec: Run Full Scan"
+      },
+      {
+        "command": "watsonsec.openDashboard",
+        "title": "WatsonSec: Open Dashboard"
+      },
+      {
+        "command": "watsonsec.exportReport",
+        "title": "WatsonSec: Export Markdown Report"
+      }
+    ],
+    "configuration": {
+      "title": "WatsonSec",
+      "properties": {
+        "watsonsec.semgrepPath": {
+          "type": "string",
+          "default": "semgrep",
+          "description": "Path to the semgrep binary."
+        },
+        "watsonsec.gitleaksPath": {
+          "type": "string",
+          "default": "gitleaks",
+          "description": "Path to the gitleaks binary."
+        },
+        "watsonsec.osvScannerPath": {
+          "type": "string",
+          "default": "osv-scanner",
+          "description": "Path to the osv-scanner binary."
+        },
+        "watsonsec.dashboardPort": {
+          "type": "number",
+          "default": 7891,
+          "description": "Local port for the findings dashboard."
+        },
+        "watsonsec.debounceMs": {
+          "type": "number",
+          "default": 2000,
+          "description": "Milliseconds to wait after a save before triggering a scan."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p tsconfig.json",
+    "bundle": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
+    "build": "npm run bundle",
+    "watch": "npm run bundle -- --watch",
+    "vscode:prepublish": "npm run build",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "@types/vscode": "^1.125.0",
+    "@vscode/vsce": "^2.32.0",
+    "esbuild": "^0.21.5",
+    "typescript": "^5.9.3"
+  }
+}
