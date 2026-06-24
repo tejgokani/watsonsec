@@ -111,7 +111,7 @@ function buildFindingsOnlyGraph(findings: Finding[]): DependencyGraph {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function collectSourceFiles(root: string): string[] {
+export function collectSourceFiles(root: string): string[] {
   const results: string[] = [];
   const SKIP_DIRS = new Set(["node_modules", ".git", "dist", "out", "build", "__pycache__", ".venv", "vendor", "target"]);
   const SOURCE_EXTS = new Set([".py", ".js", ".ts", ".jsx", ".tsx", ".mjs", ".go", ".rs"]);

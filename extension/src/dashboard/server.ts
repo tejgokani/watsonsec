@@ -1,6 +1,7 @@
 import * as http from "http";
 import type { FindingsStore } from "../store";
-import { buildDependencyGraph } from "../graph/builder";
+import { buildDependencyGraph, collectSourceFiles } from "../graph/builder";
+import { buildFunctionGraph } from "../graph/functions";
 
 export class DashboardServer {
   private server: http.Server | null = null;
@@ -45,6 +46,12 @@ export class DashboardServer {
     if (url === "/api/graph") {
       const graph = buildDependencyGraph(this.workspaceRoot, this.store.getAll());
       json(res, graph);
+      return;
+    }
+    if (url === "/api/graph/functions") {
+      const files = collectSourceFiles(this.workspaceRoot);
+      const fgraph = buildFunctionGraph(files, this.workspaceRoot, this.store.getAll());
+      json(res, fgraph);
       return;
     }
 
@@ -137,7 +144,8 @@ function dashboardHtml(): string {
 </header>
 <nav>
   <button class="active" onclick="showPage('findings',this)">Findings</button>
-  <button onclick="showPage('graph',this)">Dependency Graph</button>
+  <button onclick="showPage('graph',this)">File Graph</button>
+  <button onclick="showPage('fngraph',this)">Function Graph</button>
   <button onclick="showPage('scans',this)">Scan History</button>
 </nav>
 
@@ -179,6 +187,20 @@ function dashboardHtml(): string {
   <svg id="graph-svg" style="height:600px"></svg>
 </div>
 
+<!-- ═══════════════ FUNCTION GRAPH PAGE ══════ -->
+<div id="page-fngraph" class="page">
+  <div id="page-fngraph" style="padding:16px 24px">
+    <div class="graph-legend">
+      <span><span class="dot" style="background:var(--critical)"></span>Critical</span>
+      <span><span class="dot" style="background:var(--high)"></span>High</span>
+      <span><span class="dot" style="background:var(--medium)"></span>Medium</span>
+      <span><span class="dot" style="background:#4a4e69"></span>No findings</span>
+      <span style="margin-left:auto;color:var(--muted)">Nodes = functions · Edges = calls within same file · Drag to reposition</span>
+    </div>
+    <svg id="fn-graph-svg" style="height:600px;width:100%;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border)"></svg>
+  </div>
+</div>
+
 <!-- ═══════════════ SCANS PAGE ═══════════════ -->
 <div id="page-scans" class="page">
   <div style="padding:16px 24px 40px">
@@ -215,12 +237,21 @@ async function loadGraph(){
   }catch(e){console.error(e)}
 }
 
+let fnGraphData={functions:[],calls:[]};
+async function loadFunctionGraph(){
+  try{
+    const r=await fetch('/api/graph/functions'); fnGraphData=await r.json();
+    renderFunctionGraph();
+  }catch(e){console.error(e)}
+}
+
 function showPage(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   btn.classList.add('active');
   if(name==='graph') loadGraph();
+  if(name==='fngraph') loadFunctionGraph();
 }
 
 function updateToolFilter(){
@@ -391,6 +422,87 @@ function renderGraph(){
     if(tick<200) animFrame=requestAnimationFrame(step);
   }
   animFrame=requestAnimationFrame(step);
+}
+
+// ─── Function graph renderer (reuses same force simulation logic) ──────────
+
+function renderFunctionGraph(){
+  const svg=document.getElementById('fn-graph-svg');
+  const W=svg.clientWidth||900,H=svg.clientHeight||600;
+  svg.innerHTML='';
+  const ns='http://www.w3.org/2000/svg';
+  const fns=fnGraphData.functions||[], calls=fnGraphData.calls||[];
+
+  if(!fns.length){
+    const t=document.createElementNS(ns,'text');
+    t.setAttribute('x',W/2);t.setAttribute('y',H/2);t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill','#718096');t.textContent='No functions extracted — save a Python/JS/TS/Go file first';
+    svg.appendChild(t);return;
+  }
+
+  const simFn=fns.map(n=>({...n,x:W/2+(Math.random()-.5)*400,y:H/2+(Math.random()-.5)*400,vx:0,vy:0}));
+  const fnById=Object.fromEntries(simFn.map(n=>[n.id,n]));
+  const simCalls=calls.map(e=>({source:fnById[e.caller],target:fnById[e.callee]})).filter(e=>e.source&&e.target);
+
+  const defs=document.createElementNS(ns,'defs');
+  const marker=document.createElementNS(ns,'marker');
+  marker.setAttribute('id','fn-arrow');marker.setAttribute('markerWidth','6');marker.setAttribute('markerHeight','6');
+  marker.setAttribute('refX','16');marker.setAttribute('refY','3');marker.setAttribute('orient','auto');
+  const mp=document.createElementNS(ns,'path');
+  mp.setAttribute('d','M0,0 L0,6 L6,3 z');mp.setAttribute('fill','#45aaf2');
+  marker.appendChild(mp);defs.appendChild(marker);svg.appendChild(defs);
+
+  const eg=document.createElementNS(ns,'g'),ng=document.createElementNS(ns,'g');
+  svg.appendChild(eg);svg.appendChild(ng);
+
+  const lineEls=simCalls.map(()=>{
+    const l=document.createElementNS(ns,'line');
+    l.setAttribute('stroke','#45aaf2');l.setAttribute('stroke-width','1');l.setAttribute('opacity','0.5');
+    l.setAttribute('marker-end','url(#fn-arrow)');
+    eg.appendChild(l);return l;
+  });
+
+  const nodeEls=simFn.map(n=>{
+    const g=document.createElementNS(ns,'g');g.style.cursor='pointer';
+    const hasFinding=n.findings&&n.findings.length>0;
+    const r=hasFinding?10:6;
+    const c=document.createElementNS(ns,'circle');
+    c.setAttribute('r',r);c.setAttribute('fill',SEV_COLOR[n.maxSeverity]||'#4a4e69');
+    c.setAttribute('stroke',hasFinding?'#fff':'#1a1d27');c.setAttribute('stroke-width','1.5');
+    const t=document.createElementNS(ns,'text');
+    t.setAttribute('dy','18');t.setAttribute('text-anchor','middle');t.setAttribute('fill','#a0aec0');
+    t.setAttribute('font-size','9');t.textContent=n.functionName;
+    const title=document.createElementNS(ns,'title');
+    title.textContent=n.id+' L'+n.startLine+'-'+n.endLine+(hasFinding?' ('+n.findings.length+' finding'+(n.findings.length===1?'':'s')+')':'');
+    g.appendChild(c);g.appendChild(t);g.appendChild(title);
+    let dragging=false,ox=0,oy=0;
+    g.addEventListener('mousedown',e=>{dragging=true;ox=e.clientX-n.x;oy=e.clientY-n.y;n.pinned=true});
+    svg.addEventListener('mousemove',e=>{if(!dragging)return;n.x=e.clientX-ox;n.y=e.clientY-oy});
+    svg.addEventListener('mouseup',()=>{dragging=false});
+    ng.appendChild(g);return{g};
+  });
+
+  let tick2=0;
+  function step2(){
+    tick2++;
+    for(let i=0;i<simFn.length;i++){for(let j=i+1;j<simFn.length;j++){
+      const a=simFn[i],b=simFn[j];const dx=b.x-a.x,dy=b.y-a.y;
+      const d=Math.max(1,Math.sqrt(dx*dx+dy*dy));const f=600/(d*d);
+      a.vx-=f*dx/d;a.vy-=f*dy/d;b.vx+=f*dx/d;b.vy+=f*dy/d;
+    }}
+    for(const e of simCalls){const dx=e.target.x-e.source.x,dy=e.target.y-e.source.y;
+      const d=Math.max(1,Math.sqrt(dx*dx+dy*dy));const f=(d-80)*0.06;
+      e.source.vx+=f*dx/d;e.source.vy+=f*dy/d;e.target.vx-=f*dx/d;e.target.vy-=f*dy/d;
+    }
+    for(const n of simFn){n.vx+=(W/2-n.x)*0.004;n.vy+=(H/2-n.y)*0.004;}
+    for(const n of simFn){if(n.pinned)continue;n.x+=n.vx*0.8;n.y+=n.vy*0.8;n.vx*=0.7;n.vy*=0.7;
+      n.x=Math.max(20,Math.min(W-20,n.x));n.y=Math.max(20,Math.min(H-20,n.y));}
+    simFn.forEach((n,i)=>nodeEls[i].g.setAttribute('transform','translate('+n.x+','+n.y+')'));
+    simCalls.forEach((e,i)=>{lineEls[i].setAttribute('x1',e.source.x);lineEls[i].setAttribute('y1',e.source.y);
+      lineEls[i].setAttribute('x2',e.target.x);lineEls[i].setAttribute('y2',e.target.y);});
+    if(tick2<200) requestAnimationFrame(step2);
+  }
+  requestAnimationFrame(step2);
 }
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
