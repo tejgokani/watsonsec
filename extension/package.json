@@ -2,7 +2,7 @@
   "name": "watsonsec",
   "displayName": "WatsonSec",
   "description": "Local-first security engine: runs real scanners (Semgrep, Gitleaks, Trivy, Checkov, Bandit, gosec, Grype, TruffleHog, CodeQL) on every save, deduplicates findings, and surfaces them in a dashboard and MCP bridge.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "tejgokani",
   "icon": "assets/icon.png",
   "engines": {
