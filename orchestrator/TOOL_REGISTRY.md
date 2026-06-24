@@ -23,11 +23,16 @@ merged. See `AGENTS.md` §"Adding a new scanner adapter" for the full checklist.
 |---|---|---|---|
 | CodeQL | 2.17.6 | Mixed (engine proprietary, queries open MIT/Apache-2.0) | Slow: creates/analyzes database; can take minutes |
 
-## Pending (Phase 3+)
+## Phase 4 — SBOM generation (not a findings scanner)
+
+| Tool | Version pinned | License | Command |
+|---|---|---|---|
+| Syft | 1.4.1 | Apache-2.0 | `watsonsec.generateSbom` — writes CycloneDX JSON to workspace root |
+
+## Deferred
 
 | Tool | License | Notes |
 |---|---|---|
-| Syft | Apache-2.0 | SBOM generation; not a findings scanner — add as a separate report command |
 | SonarQube CE | LGPL-3.0 | Requires a running SonarQube server — evaluate for CI companion mode |
 | MobSF | GPL-3.0 | Mobile-only, out of scope for in-extension use |
 

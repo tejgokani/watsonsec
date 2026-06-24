@@ -1,0 +1,9 @@
+{
+  "name": "watsonsec-syft-fixture",
+  "version": "0.0.1",
+  "description": "Fixture for Syft SBOM adapter testing — a minimal package.json for SBOM generation.",
+  "dependencies": {
+    "express": "4.18.2",
+    "lodash": "4.17.21"
+  }
+}

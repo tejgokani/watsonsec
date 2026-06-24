@@ -8,6 +8,7 @@ import { StatusBar } from "./statusBar";
 import { DiagnosticsManager } from "./diagnostics/manager";
 import { exportMarkdown } from "./reports/exporter";
 import { notifyIfUpdatesAvailable } from "./updater";
+import { generateSbom } from "./orchestrator/adapters/syft";
 import type { Finding } from "./types";
 
 let scanDebounce: ReturnType<typeof setTimeout> | null = null;
@@ -53,6 +54,25 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.window.showInformationMessage("WatsonSec: Report saved to watsonsec-report.md");
   });
 
+  const generateSbomCmd = vscode.commands.registerCommand("watsonsec.generateSbom", async () => {
+    const syftPath = config.get<string>("syftPath") ?? "syft";
+    const outputPath = path.join(workspaceRoot, "watsonsec-sbom.cyclonedx.json");
+    vscode.window.showInformationMessage("WatsonSec: Generating SBOM with Syft…");
+    const result = await generateSbom(workspaceRoot, syftPath, outputPath);
+    if (result.error) {
+      vscode.window.showErrorMessage(`WatsonSec: SBOM generation failed — ${result.error}`);
+    } else {
+      const action = await vscode.window.showInformationMessage(
+        `WatsonSec: SBOM saved (${result.packageCount} packages) → watsonsec-sbom.cyclonedx.json`,
+        "Open File"
+      );
+      if (action === "Open File") {
+        const doc = await vscode.workspace.openTextDocument(outputPath);
+        await vscode.window.showTextDocument(doc);
+      }
+    }
+  });
+
   // ─── File watcher ──────────────────────────────────────────────────────────
 
   const watcher = vscode.workspace.createFileSystemWatcher(
@@ -86,6 +106,7 @@ export function activate(context: vscode.ExtensionContext): void {
     runFullScanCmd,
     openDashboardCmd,
     exportReportCmd,
+    generateSbomCmd,
     statusBar,
     diagnostics,
     watcher

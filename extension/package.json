@@ -2,7 +2,7 @@
   "name": "watsonsec",
   "displayName": "WatsonSec",
   "description": "Local-first security engine: runs real scanners (Semgrep, Gitleaks, Trivy, Checkov, Bandit, gosec, Grype, TruffleHog, CodeQL) on every save, deduplicates findings, and surfaces them in a dashboard and MCP bridge.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "tejgokani",
   "icon": "assets/icon.png",
   "engines": {
@@ -44,6 +44,10 @@
       {
         "command": "watsonsec.exportReport",
         "title": "WatsonSec: Export Markdown Report"
+      },
+      {
+        "command": "watsonsec.generateSbom",
+        "title": "WatsonSec: Generate SBOM (Syft)"
       }
     ],
     "configuration": {
@@ -113,6 +117,11 @@
           "type": "number",
           "default": 15,
           "description": "Number of fast scans between full scans (which include CodeQL). Set to 0 to disable automatic full scans."
+        },
+        "watsonsec.syftPath": {
+          "type": "string",
+          "default": "syft",
+          "description": "Path to the syft binary (used for SBOM generation)."
         }
       }
     }
