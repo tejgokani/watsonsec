@@ -8,6 +8,7 @@ export class DashboardServer {
   private readonly store: FindingsStore;
   private readonly port: number;
   private workspaceRoot: string = "";
+  private fnGraphCache: { scanId: string; data: unknown } | null = null;
 
   constructor(store: FindingsStore, port: number) {
     this.store = store;
@@ -49,9 +50,14 @@ export class DashboardServer {
       return;
     }
     if (url === "/api/graph/functions") {
-      const files = collectSourceFiles(this.workspaceRoot);
-      const fgraph = buildFunctionGraph(files, this.workspaceRoot, this.store.getAll());
-      json(res, fgraph);
+      const scans = this.store.getRecentScans();
+      const latestScanId = scans[0]?.id ?? "none";
+      if (!this.fnGraphCache || this.fnGraphCache.scanId !== latestScanId) {
+        const files = collectSourceFiles(this.workspaceRoot);
+        const fgraph = buildFunctionGraph(files, this.workspaceRoot, this.store.getAll());
+        this.fnGraphCache = { scanId: latestScanId, data: fgraph };
+      }
+      json(res, this.fnGraphCache.data);
       return;
     }
 
@@ -67,10 +73,10 @@ export class DashboardServer {
 }
 
 function json(res: http.ServerResponse, data: unknown): void {
-  res.writeHead(200, {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-  });
+  // No wildcard CORS — the dashboard is a same-origin local server.
+  // Omitting Access-Control-Allow-Origin blocks cross-origin stealth reads
+  // from pages open in the user's browser while the dashboard is running.
+  res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify(data));
 }
 
@@ -512,7 +518,7 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 });
 
 load();
-setInterval(load,30000);
+setInterval(()=>{ if(!document.hidden) load(); },30000);
 </script>
 </body>
 </html>`;

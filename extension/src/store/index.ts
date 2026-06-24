@@ -12,10 +12,13 @@ interface StoreData {
 // Upgrade path to SQLite is straightforward if write contention becomes a problem.
 export class FindingsStore {
   private readonly dbPath: string;
+  private readonly bakPath: string;
   private data: StoreData = { findings: {}, scans: [] };
+  private saveTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(storagePath: string) {
     this.dbPath = path.join(storagePath, "findings.json");
+    this.bakPath = path.join(storagePath, "findings.json.bak");
     this.load();
   }
 
@@ -94,22 +97,39 @@ export class FindingsStore {
   // ─── Persistence ───────────────────────────────────────────────────────────
 
   private load(): void {
-    try {
-      if (fs.existsSync(this.dbPath)) {
-        const raw = fs.readFileSync(this.dbPath, "utf8");
-        this.data = JSON.parse(raw) as StoreData;
+    for (const p of [this.dbPath, this.bakPath]) {
+      try {
+        if (fs.existsSync(p)) {
+          const raw = fs.readFileSync(p, "utf8");
+          this.data = JSON.parse(raw) as StoreData;
+          return;
+        }
+      } catch {
+        // Primary corrupt — try backup on next iteration, then start fresh.
       }
-    } catch {
-      // Corrupt store — start fresh. We'll overwrite on next save.
-      this.data = { findings: {}, scans: [] };
     }
+    this.data = { findings: {}, scans: [] };
   }
 
   private save(): void {
+    // Batch writes: defer 200ms so rapid successive saves become one I/O op.
+    if (this.saveTimer) return;
+    this.saveTimer = setTimeout(() => {
+      this.saveTimer = null;
+      this.flushToDisk();
+    }, 200);
+  }
+
+  private flushToDisk(): void {
     const dir = path.dirname(this.dbPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
-    fs.writeFileSync(this.dbPath, JSON.stringify(this.data, null, 2), "utf8");
+    const payload = JSON.stringify(this.data, null, 2);
+    // Write backup before overwriting primary so corruption is recoverable.
+    if (fs.existsSync(this.dbPath)) {
+      try { fs.copyFileSync(this.dbPath, this.bakPath); } catch { /* non-fatal */ }
+    }
+    fs.writeFileSync(this.dbPath, payload, "utf8");
   }
 }

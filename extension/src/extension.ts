@@ -13,6 +13,8 @@ import type { Finding } from "./types";
 
 let scanDebounce: ReturnType<typeof setTimeout> | null = null;
 let saveSinceLastSlowScan = 0;
+let isScanning = false;
+let pendingScanMode: "fast" | "full" | null = null;
 
 export function activate(context: vscode.ExtensionContext): void {
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -127,6 +129,13 @@ async function executeScan(
   store: FindingsStore,
   mode: "fast" | "full"
 ): Promise<void> {
+  // Mutex: if a scan is already running, queue the requested mode and return.
+  // "full" beats "fast" in the queue so a pending fast is upgraded if needed.
+  if (isScanning) {
+    pendingScanMode = (pendingScanMode === "full" || mode === "full") ? "full" : "fast";
+    return;
+  }
+  isScanning = true;
   statusBar.setScanning();
   try {
     const result = mode === "full"
@@ -147,6 +156,13 @@ async function executeScan(
     const msg = err instanceof Error ? err.message : String(err);
     statusBar.setError(msg);
     console.error("[watsonsec]", err);
+  } finally {
+    isScanning = false;
+    if (pendingScanMode) {
+      const next = pendingScanMode;
+      pendingScanMode = null;
+      executeScan(workspaceRoot, orchestrator, statusBar, diagnostics, store, next);
+    }
   }
 }
 

@@ -188,6 +188,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     case "get_findings_for_file": {
       const { filePath } = (request.params.arguments ?? {}) as { filePath: string };
+      // Reject absolute paths and traversal sequences — findings are keyed by
+      // workspace-relative paths only, so any absolute path or ".." is invalid input.
+      if (!filePath || path.isAbsolute(filePath) || filePath.includes("..")) {
+        return {
+          content: [{ type: "text", text: JSON.stringify({ error: "filePath must be a workspace-relative path with no '..' segments" }) }],
+        };
+      }
       const active = allFindings.filter(
         (f) => f.status !== "resolved" && f.filePath === filePath
       );
